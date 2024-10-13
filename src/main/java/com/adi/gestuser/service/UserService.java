@@ -2,6 +2,7 @@ package com.adi.gestuser.service;
 
 import com.adi.gestuser.dto.PagedResponseDTO;
 import com.adi.gestuser.dto.ProfilePermissionDTO;
+import com.adi.gestuser.dto.SignupDTO;
 import com.adi.gestuser.dto.UserDTO;
 import com.adi.gestuser.entity.ProfilePermission;
 import com.adi.gestuser.entity.User;
@@ -14,7 +15,8 @@ import java.util.Set;
 public interface UserService {
 
     // VOID RETURNS
-    void createUser( User user );
+    void createUser( SignupDTO signupDTO, boolean confEmail);
+    void createUser(User user);
 
     void deleteUser(Long id );
 

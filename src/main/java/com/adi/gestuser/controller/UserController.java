@@ -1,8 +1,10 @@
 package com.adi.gestuser.controller;
 
 import com.adi.gestuser.dto.PagedResponseDTO;
+import com.adi.gestuser.dto.SignupDTO;
 import com.adi.gestuser.dto.UserDTO;
 import com.adi.gestuser.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +38,13 @@ public class UserController {
     public ResponseEntity<UserDTO> getUserById( @PathVariable("id") Long id ) {
 
         return new ResponseEntity<>( userService.getUserDTOById( id ), HttpStatus.OK );
+    }
+
+    @PostMapping(value = "/signup")
+    public ResponseEntity<Void> signup(@Valid @RequestBody SignupDTO signupDTO ) {
+        userService.createUser( signupDTO, true );
+
+        return new ResponseEntity<>(HttpStatus.CREATED );
     }
 
 
