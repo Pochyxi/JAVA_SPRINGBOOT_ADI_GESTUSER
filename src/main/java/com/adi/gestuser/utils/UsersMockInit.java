@@ -101,8 +101,6 @@ public class UsersMockInit {
         Profile profileAdmin = userAdmin.getProfile();
         profileAdmin.setName( ProfileList.ADMIN );
         profileAdmin.setPower( 0 );
-        profileRepository.save( profileAdmin );
-
         userAdmin.setProfile( profileAdmin );
         return userRepository.save( userAdmin );
     }

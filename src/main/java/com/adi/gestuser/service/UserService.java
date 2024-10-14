@@ -1,9 +1,6 @@
 package com.adi.gestuser.service;
 
-import com.adi.gestuser.dto.PagedResponseDTO;
-import com.adi.gestuser.dto.ProfilePermissionDTO;
-import com.adi.gestuser.dto.SignupDTO;
-import com.adi.gestuser.dto.UserDTO;
+import com.adi.gestuser.dto.*;
 import com.adi.gestuser.entity.ProfilePermission;
 import com.adi.gestuser.entity.User;
 import org.springframework.data.domain.Page;
@@ -29,6 +26,7 @@ public interface UserService {
     Optional<User> findByEmail( String email );
 
     Optional<User> findByUsernameOrEmail( String username, String email );
+    UserDTOInternal findDTOByUsernameOrEmail( String username, String email );
 
     User getUserByAuthentication();
 
@@ -61,4 +59,5 @@ public interface UserService {
     Set<ProfilePermission> getProfilePermissionsByUserId( Long userId );
 
 
+    Set<ProfilePermissionDTO> findByProfileIdDTO( Long profileId );
 }

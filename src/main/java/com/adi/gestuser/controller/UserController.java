@@ -1,8 +1,10 @@
 package com.adi.gestuser.controller;
 
-import com.adi.gestuser.dto.PagedResponseDTO;
-import com.adi.gestuser.dto.SignupDTO;
-import com.adi.gestuser.dto.UserDTO;
+import com.adi.gestuser.dto.*;
+import com.adi.gestuser.entity.User;
+import com.adi.gestuser.exception.ResourceNotFoundException;
+import com.adi.gestuser.repository.ProfilePermissionRepository;
+import com.adi.gestuser.repository.UserRepository;
 import com.adi.gestuser.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 
 @RestController
 @RequestMapping("api/user")
@@ -18,13 +22,14 @@ public class UserController {
 
     private final UserService userService;
 
+    private final UserRepository userRepository;
+
 
     @Autowired
-    public UserController( UserService userService ) {
+    public UserController( UserService userService, UserRepository userRepository, ProfilePermissionRepository profilePermissionRepository ) {
 
         this.userService = userService;
-
-        System.out.println("UserController loaded");
+        this.userRepository = userRepository;
     }
 
     /*
@@ -35,9 +40,11 @@ public class UserController {
      */
     @GetMapping(value = "/{id}")
     @PreAuthorize( "hasRole('USER')" )
-    public ResponseEntity<UserDTO> getUserById( @PathVariable("id") Long id ) {
+    public ResponseEntity<User> getUserById( @PathVariable("id") Long id ) {
 
-        return new ResponseEntity<>( userService.getUserDTOById( id ), HttpStatus.OK );
+        User user = userRepository.findById( id ).orElseThrow( () -> new ResourceNotFoundException( "User not found with id: " + id ) );
+
+        return new ResponseEntity<>( user, HttpStatus.OK );
     }
 
     @PostMapping(value = "/signup")
@@ -45,6 +52,25 @@ public class UserController {
         userService.createUser( signupDTO, true );
 
         return new ResponseEntity<>(HttpStatus.CREATED );
+    }
+
+    @GetMapping(value = "/username_email/{username_email}")
+    public ResponseEntity<UserDTOInternal> findByUsernameOrEmail( @PathVariable("username_email") String username_email) {
+        UserDTOInternal user = userService.findDTOByUsernameOrEmail( username_email, username_email );
+
+
+        return new ResponseEntity<>( user, HttpStatus.OK );
+
+    }
+
+    @GetMapping(value = "/username_email/exist/{username_email}")
+    public ResponseEntity<Boolean> existsByUsernameOrEmail( @PathVariable("username_email") String username_email) {
+        return new ResponseEntity<>( userService.existsByUsernameOrEmail( username_email, username_email ), HttpStatus.OK );
+    }
+
+    @GetMapping(value = "/profile_permissions/{profileId}")
+    public ResponseEntity<Set<ProfilePermissionDTO>> findByProfileId( @PathVariable("profileId") Long profileId) {
+        return new ResponseEntity<>( userService.findByProfileIdDTO( profileId ), HttpStatus.OK );
     }
 
 
