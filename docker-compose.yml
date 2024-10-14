@@ -15,7 +15,7 @@ services:
   pgsql:  # Servizio chiamato "pgsql" (PostgreSQL)
     image: postgres:latest  # Utilizza l'immagine Docker di PostgreSQL nella versione più recente
     restart: unless-stopped  # Il container si riavvia automaticamente tranne se viene fermato esplicitamente
-    container_name: postgresql_smartaxcy  # Nome del container specificato come "postgresql_smartaxcent"
+    container_name: postgresql_smartaxcy  # Nome del container specificato come "postgresql_smartaxcy"
     volumes:
       - psdb-volume-smartaxcy:/var/lib/postgresql/data  # Mappa un volume per mantenere i dati persistenti del database
     networks:
@@ -25,6 +25,7 @@ services:
       - "5440:5432"  # Espone la porta 5432 del container sulla porta 5440 del host
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Admin94!}  # Definisce la password dell'utente PostgreSQL, con valore predefinito se non specificato
+      POSTGRES_DB: smartaxcydb  # Crea il database "smartaxcydb" all'avvio
     healthcheck:  # Configurazione di un healthcheck per il servizio PostgreSQL
       test: ["CMD-SHELL", "pg_isready -U postgres"]  # Comando per verificare se PostgreSQL è pronto
       interval: 10s  # Intervallo tra ogni healthcheck (10 secondi)
@@ -34,7 +35,7 @@ services:
   pgadmin:  # Servizio chiamato "pgadmin" (pgAdmin per la gestione di PostgreSQL)
     image: dpage/pgadmin4  # Utilizza l'immagine Docker per pgAdmin 4
     restart: unless-stopped  # Il container si riavvia automaticamente tranne se viene fermato esplicitamente
-    container_name: pgadmin_smartaxcy  # Nome del container specificato come "pgadmin_smartaxy"
+    container_name: pgadmin_smartaxcy  # Nome del container specificato come "pgadmin_smartaxcy"
     networks:
       nt_smartaxcy:  # Connetti il container alla rete "nt_smartaxcy"
         ipv4_address: 172.24.0.3  # Assegna un indirizzo IP statico specifico al container
@@ -46,6 +47,20 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-Admin94!}  # Definisce la password predefinita per l'accesso a pgAdmin
     depends_on:
       - pgsql  # Specifica che questo servizio deve essere avviato solo dopo che "pgsql" è pronto
+
+  smartaxcybe-app:  # Servizio per l'applicazione Spring Boot
+    build:
+      context: .  # Usa il Dockerfile presente nella directory corrente
+      dockerfile: Dockerfile  # Specifica il nome del Dockerfile
+    container_name: smartaxcybe-app  # Nome del container per il backend
+    restart: unless-stopped  # Riavvia automaticamente il container tranne se fermato esplicitamente
+    ports:
+      - "8090:8080"  # Espone la porta 8090
+    networks:
+      nt_smartaxcy:  # Connetti l'app alla rete "nt_smartaxcy"
+        ipv4_address: 172.24.0.4  # Assegna un IP statico per il backend
+    depends_on:
+      - pgsql  # Assicura che il servizio PostgreSQL sia pronto prima di avviare l'app
 
 # Definisce un volume Docker per conservare i dati in modo persistente
 volumes:
