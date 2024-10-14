@@ -1,0 +1,52 @@
+# Definisce il nome del file Docker Compose
+name: postgres-pgadmin-smartaxcy
+
+# Definizione delle reti utilizzate nel file Compose
+networks:
+  nt_smartaxcy:  # Definisce una rete chiamata "nt_smartaxcy"
+    driver: bridge  # Specifica il driver per la rete come "bridge"
+    ipam:  # Configurazione IPAM (gestione IP) per assegnare gli indirizzi IP
+      driver: default  # Driver predefinito per IPAM
+      config:
+        - subnet: 172.24.0.0/24  # Definisce la sottorete per la rete (range di IP disponibili)
+
+# Definizione dei servizi (container) che verranno eseguiti
+services:
+  pgsql:  # Servizio chiamato "pgsql" (PostgreSQL)
+    image: postgres:latest  # Utilizza l'immagine Docker di PostgreSQL nella versione più recente
+    restart: unless-stopped  # Il container si riavvia automaticamente tranne se viene fermato esplicitamente
+    container_name: postgresql_smartaxcy  # Nome del container specificato come "postgresql_smartaxcent"
+    volumes:
+      - psdb-volume-smartaxcy:/var/lib/postgresql/data  # Mappa un volume per mantenere i dati persistenti del database
+    networks:
+      nt_smartaxcy:  # Connetti il container alla rete "nt_smartaxcy"
+        ipv4_address: 172.24.0.2  # Assegna un indirizzo IP statico specifico al container
+    ports:
+      - "5440:5432"  # Espone la porta 5432 del container sulla porta 5440 del host
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Admin94!}  # Definisce la password dell'utente PostgreSQL, con valore predefinito se non specificato
+    healthcheck:  # Configurazione di un healthcheck per il servizio PostgreSQL
+      test: ["CMD-SHELL", "pg_isready -U postgres"]  # Comando per verificare se PostgreSQL è pronto
+      interval: 10s  # Intervallo tra ogni healthcheck (10 secondi)
+      timeout: 5s  # Timeout per ogni tentativo di healthcheck (5 secondi)
+      retries: 5  # Numero di tentativi di healthcheck prima di dichiarare il container "non sano"
+
+  pgadmin:  # Servizio chiamato "pgadmin" (pgAdmin per la gestione di PostgreSQL)
+    image: dpage/pgadmin4  # Utilizza l'immagine Docker per pgAdmin 4
+    restart: unless-stopped  # Il container si riavvia automaticamente tranne se viene fermato esplicitamente
+    container_name: pgadmin_smartaxcy  # Nome del container specificato come "pgadmin_smartaxy"
+    networks:
+      nt_smartaxcy:  # Connetti il container alla rete "nt_smartaxcy"
+        ipv4_address: 172.24.0.3  # Assegna un indirizzo IP statico specifico al container
+    ports:
+      - "8091:80"  # Espone la porta 80 del container sulla porta 8091 dell'host
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: "True"  # Abilita la modalità server di pgAdmin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-adienerlopez@gmail.com}  # Definisce l'email predefinita per l'accesso a pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-Admin94!}  # Definisce la password predefinita per l'accesso a pgAdmin
+    depends_on:
+      - pgsql  # Specifica che questo servizio deve essere avviato solo dopo che "pgsql" è pronto
+
+# Definisce un volume Docker per conservare i dati in modo persistente
+volumes:
+  psdb-volume-smartaxcy:  # Nome del volume persistente utilizzato dal database PostgreSQL
