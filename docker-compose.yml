@@ -25,7 +25,7 @@ services:
       - "5440:5432"  # Espone la porta 5432 del container sulla porta 5440 del host
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Admin94!}  # Definisce la password dell'utente PostgreSQL, con valore predefinito se non specificato
-      POSTGRES_DB: smartaxcydb  # Crea il database "smartaxcydb" all'avvio
+      POSTGRES_DB: ${POSTGRES_DB:-smartaxcydb}  # Crea il database "smartaxcydb" all'avvio
     healthcheck:  # Configurazione di un healthcheck per il servizio PostgreSQL
       test: ["CMD-SHELL", "pg_isready -U postgres"]  # Comando per verificare se PostgreSQL è pronto
       interval: 10s  # Intervallo tra ogni healthcheck (10 secondi)
