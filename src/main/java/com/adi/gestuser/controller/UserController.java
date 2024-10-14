@@ -47,6 +47,13 @@ public class UserController {
         return new ResponseEntity<>( user, HttpStatus.OK );
     }
 
+
+    /*
+     * LOGIN
+        * Questo metodo permette di effettuare la registrazione
+        * PREAUTHORIZATION
+            * NONE
+     */
     @PostMapping(value = "/signup")
     @PreAuthorize( "hasRole('WRITE')" )
     public ResponseEntity<Void> signup(@Valid @RequestBody SignupDTO signupDTO ) {
@@ -55,6 +62,13 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.CREATED );
     }
 
+
+    /*
+     * GET USER BY AUTHENTICATION
+        * Questo metodo permette di ottenere i dati di un utente per username o email
+        * PREAUTHORIZE:
+            * Utente con permesso READ
+     */
     @GetMapping(value = "/username_email/{username_email}")
     @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<UserDTOInternal> findByUsernameOrEmail( @PathVariable("username_email") String username_email) {
@@ -65,12 +79,27 @@ public class UserController {
 
     }
 
+
+    /*
+     * GET USER BY AUTHENTICATION
+        * Questo metodo permette di ottenere un booleano in base all'esistenza di un utente
+        *  con username o email specificati
+        * PREAUTHORIZE:
+            * Utente con permesso READ
+     */
     @GetMapping(value = "/username_email/exist/{username_email}")
     @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<Boolean> existsByUsernameOrEmail( @PathVariable("username_email") String username_email) {
         return new ResponseEntity<>( userService.existsByUsernameOrEmail( username_email, username_email ), HttpStatus.OK );
     }
 
+
+    /*
+     * GET USER BY AUTHENTICATION
+        * Questo metodo permette di ottenere i profiles permissions di un utente
+        * PREAUTHORIZE:
+            * Utente con permesso READ
+     */
     @GetMapping(value = "/profile_permissions/{profileId}")
     @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<Set<ProfilePermissionDTO>> findByProfileId( @PathVariable("profileId") Long profileId) {
