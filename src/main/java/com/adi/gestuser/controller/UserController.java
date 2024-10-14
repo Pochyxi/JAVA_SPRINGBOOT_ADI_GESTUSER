@@ -39,7 +39,7 @@ public class UserController {
             * Utente con permesso USER_READ e potere più alto sull'utente specificato
      */
     @GetMapping(value = "/{id}")
-    @PreAuthorize( "hasRole('USER')" )
+    @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<User> getUserById( @PathVariable("id") Long id ) {
 
         User user = userRepository.findById( id ).orElseThrow( () -> new ResourceNotFoundException( "User not found with id: " + id ) );
@@ -48,6 +48,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/signup")
+    @PreAuthorize( "hasRole('WRITE')" )
     public ResponseEntity<Void> signup(@Valid @RequestBody SignupDTO signupDTO ) {
         userService.createUser( signupDTO, true );
 
@@ -55,6 +56,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/username_email/{username_email}")
+    @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<UserDTOInternal> findByUsernameOrEmail( @PathVariable("username_email") String username_email) {
         UserDTOInternal user = userService.findDTOByUsernameOrEmail( username_email, username_email );
 
@@ -64,11 +66,13 @@ public class UserController {
     }
 
     @GetMapping(value = "/username_email/exist/{username_email}")
+    @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<Boolean> existsByUsernameOrEmail( @PathVariable("username_email") String username_email) {
         return new ResponseEntity<>( userService.existsByUsernameOrEmail( username_email, username_email ), HttpStatus.OK );
     }
 
     @GetMapping(value = "/profile_permissions/{profileId}")
+    @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<Set<ProfilePermissionDTO>> findByProfileId( @PathVariable("profileId") Long profileId) {
         return new ResponseEntity<>( userService.findByProfileIdDTO( profileId ), HttpStatus.OK );
     }
@@ -81,7 +85,7 @@ public class UserController {
             * Utente con permesso USER_READ e potere più alto degli utenti richiesti
      */
     @GetMapping(value = "/all")
-    @PreAuthorize( "hasRole('USER')" )
+    @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<PagedResponseDTO<UserDTO>> getAllUsers(
             @RequestParam(value = "pageNo", defaultValue = "${app.pagination.default_pageNumber}") int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "${app.pagination.default_pageSize}") int pageSize,
@@ -100,7 +104,7 @@ public class UserController {
         * Utente con permesso USER_UPDATE e potere più alto sull'utente specificato
      */
     @PutMapping("/update/{id}")
-    @PreAuthorize( "hasRole('ADMIN')" )
+    @PreAuthorize( "hasRole('WRITE')" )
     public ResponseEntity<UserDTO> modifyUser( @PathVariable("id") Long id,
                                                @RequestBody UserDTO userDTO ) {
 
@@ -115,7 +119,7 @@ public class UserController {
         * Utente con permesso USER_DELETE e potere più alto sull'utente specificato
      */
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize( "hasRole('ADMIN')" )
+    @PreAuthorize( "hasRole('WRITE')" )
     public ResponseEntity<Void> deleteUser( @PathVariable("id") Long id ) {
         userService.deleteUser( id );
 
@@ -123,7 +127,7 @@ public class UserController {
     }
 
     @GetMapping("/email_contains/{email}")
-    @PreAuthorize( "hasRole('USER')" )
+    @PreAuthorize( "hasRole('READ')" )
     public ResponseEntity<PagedResponseDTO<UserDTO>> getByEmailContains(
             @PathVariable("email") String email,
             @RequestParam(value = "pageNo", defaultValue = "${app.pagination.default_pageNumber}") int pageNo,

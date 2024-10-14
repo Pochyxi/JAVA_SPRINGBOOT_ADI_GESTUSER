@@ -77,13 +77,13 @@ public class SecurityConfiguration {
         UserDetails readUser = User.builder()
                 .username(securityProperties.getRead().getUsername())
                 .password(passwordEncoder.encode(securityProperties.getRead().getPassword()))
-                .roles("USER")
+                .roles("READ")
                 .build();
 
         UserDetails writeUser = User.builder()
                 .username(securityProperties.getWrite().getUsername())
                 .password(passwordEncoder.encode(securityProperties.getWrite().getPassword()))
-                .roles("USER", "ADMIN")
+                .roles("READ", "WRITE")
                 .build();
 
         manager.createUser(readUser);
