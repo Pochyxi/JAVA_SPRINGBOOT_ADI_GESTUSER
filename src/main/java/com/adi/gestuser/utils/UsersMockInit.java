@@ -1,5 +1,6 @@
 package com.adi.gestuser.utils;
 import com.adi.gestuser.dto.SignupDTO;
+import com.adi.gestuser.entity.Permission;
 import com.adi.gestuser.entity.Profile;
 import com.adi.gestuser.entity.ProfilePermission;
 import com.adi.gestuser.entity.User;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -51,12 +53,28 @@ public class UsersMockInit {
 
     @PostConstruct
     public void initUsers() {
+        initPermissions();
+
         createUsers();
 
         User admin = unlockUser();
 
 
         setAllPermissions( admin.getProfile() );
+    }
+
+    private void initPermissions() {
+        for ( PermissionList perm : PermissionList.values()) {
+            permissionRepository.findByName(perm)
+                    .orElseGet(() -> {
+                        Permission newPerm = new Permission();
+                        newPerm.setName(perm);
+                        System.out.println("Permesso " + perm + " Creato");
+                        return permissionRepository.save(newPerm);
+                    });
+        }
+
+        logger.info("PERMESSI INIZIALIZZATI CORRETTAMENTE");
     }
 
     private void createUsers() {
@@ -146,11 +164,19 @@ public class UsersMockInit {
         }
 
         Profile profile = profileRepository.findByUserId( profileId );
+        Optional<Permission> permission = permissionRepository.findByName( permissionName );
+
+        if( permission.isEmpty() ) {
+            logger.warn( "Permesso non trovato: {}", permissionName );
+            return;
+        }
+
+        Permission permissionEntity = permission.get();
 
         ProfilePermission profilePermission = ProfilePermission
                 .builder()
                 .profile( profile )
-                .permission( permissionRepository.findByName( permissionName ).orElseThrow() )
+                .permission( permissionEntity )
                 .valueCreate( 1 )
                 .valueRead( 1 )
                 .valueUpdate( 1 )
