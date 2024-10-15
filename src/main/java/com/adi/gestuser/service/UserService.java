@@ -14,11 +14,15 @@ public interface UserService {
     // VOID RETURNS
     void createUser( SignupDTO signupDTO, boolean confEmail);
     void createUser(User user);
-
     void deleteUser(Long id );
 
+    // MAPPING
+    User mapUserDTOToEntity( UserDTO userDTO);
 
-    // USER RETURNS
+    UserDTO mapUserToDTO( User user);
+
+
+    // ENTITY RETURNS
     User save( User user );
 
     User findById( Long id );
@@ -26,13 +30,14 @@ public interface UserService {
     Optional<User> findByEmail( String email );
 
     Optional<User> findByUsernameOrEmail( String username, String email );
+
     UserDTOInternal findDTOByUsernameOrEmail( String username, String email );
 
     User getUserByAuthentication();
 
     Page<User> findByProfilePowerGreaterThanEqual( int power, Pageable page);
 
-    User mapUserDTOToEntity( UserDTO userDTO);
+    Set<ProfilePermission> getProfilePermissionsByUserId( Long userId );
 
 
     // BOOLEAN RETURNS
@@ -50,14 +55,9 @@ public interface UserService {
 
     PagedResponseDTO<UserDTO> getByEmailContains( String email, int pageNo, int pageSize, String sortBy, String sortDir);
 
-    UserDTO mapUserToDTO( User user);
-
     ProfilePermissionDTO mapProfilePermissionToDTO( ProfilePermission profilePermission );
 
     UserDTO modifyUser( Long id, UserDTO userDTO );
-
-    Set<ProfilePermission> getProfilePermissionsByUserId( Long userId );
-
 
     Set<ProfilePermissionDTO> findByProfileIdDTO( Long profileId );
 }

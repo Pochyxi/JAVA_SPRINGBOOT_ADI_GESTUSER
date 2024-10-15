@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Appender standard per il logging dell'applicazione -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%boldYellow(%d{dd-MM-yyyy HH:mm:ss.SSS}) %boldGreen([%thread]) %highlight(%-5level) %boldGreen(%logger{36}.%M - %msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Appender specifico per Hibernate -->
+    <appender name="HIBERNATE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%boldCyan(%d{HH:mm:ss.SSS}) %boldMagenta([%thread]) %highlight(%-5level) %boldBlue(%logger{36}.%M - %msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Logger specifico per Hibernate -->
+    <logger name="org.hibernate.SQL" level="debug" additivity="false">
+        <appender-ref ref="HIBERNATE" />
+    </logger>
+
+    <!-- Configurazione del logger root -->
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
+
+
+
