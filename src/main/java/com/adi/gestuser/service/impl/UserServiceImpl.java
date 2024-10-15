@@ -457,6 +457,25 @@ public class UserServiceImpl implements UserService {
                 .collect( Collectors.toSet() );
     }
 
+    public ProfileDTO getProfileByUserId( Long userId ) {
+
+        Profile profile = profileRepository.findByUserId( userId );
+        Set<PermissionDTO> permissionDTOS = profile.getProfilePermissions().stream().map( permission -> {
+            PermissionDTO permissionDTO = new PermissionDTO();
+            permissionDTO.setId( permission.getId() );
+            permissionDTO.setName( permission.getPermission().getName() );
+            return permissionDTO;
+        } ).collect( Collectors.toSet() );
+
+        ProfileDTO profileDTO = new ProfileDTO();
+        profileDTO.setUserId( profile.getUser().getId() );
+        profileDTO.setName( String.valueOf( profile.getName() ) );
+        profileDTO.setPower( profile.getPower() );
+        profileDTO.setPermissions( permissionDTOS );
+
+        return profileDTO;
+    }
+
 
     // METODI INTERNI
 

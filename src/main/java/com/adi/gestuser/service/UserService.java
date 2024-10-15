@@ -60,4 +60,6 @@ public interface UserService {
     UserDTO modifyUser( Long id, UserDTO userDTO );
 
     Set<ProfilePermissionDTO> findByProfileIdDTO( Long profileId );
+
+    ProfileDTO getProfileByUserId( Long userId );
 }

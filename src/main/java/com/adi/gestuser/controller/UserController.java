@@ -1,10 +1,7 @@
 package com.adi.gestuser.controller;
 
 import com.adi.gestuser.dto.*;
-import com.adi.gestuser.entity.User;
-import com.adi.gestuser.exception.ResourceNotFoundException;
 import com.adi.gestuser.repository.ProfilePermissionRepository;
-import com.adi.gestuser.repository.UserRepository;
 import com.adi.gestuser.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,38 +12,31 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
-
 @RestController
 @RequestMapping("api/user")
 public class UserController {
 
     private final UserService userService;
 
-    private final UserRepository userRepository;
-
-
     @Autowired
-    public UserController( UserService userService, UserRepository userRepository, ProfilePermissionRepository profilePermissionRepository ) {
+    public UserController( UserService userService, ProfilePermissionRepository profilePermissionRepository ) {
 
         this.userService = userService;
-        this.userRepository = userRepository;
     }
+
 
     /*
      * GET USER BY ID
-         * Questo metodo permette di ottenere i dati di un utente specificando l'id
-         * PREAUTHORIZE:
-            * Utente con permesso USER_READ e potere più alto sull'utente specificato
+     * Questo metodo permette di ottenere i dati di un utente specificando l'id
+     * PREAUTHORIZE:
+     * Utente con permesso USER_READ e potere più alto sull'utente specificato
      */
     @GetMapping(value = "/{id}")
     @PreAuthorize( "hasRole('READ')" )
-    public ResponseEntity<User> getUserById( @PathVariable("id") Long id ) {
+    public ResponseEntity<UserDTO> getUserById( @PathVariable("id") Long id ) {
 
-        User user = userRepository.findById( id ).orElseThrow( () -> new ResourceNotFoundException( "User not found with id: " + id ) );
-
-        return new ResponseEntity<>( user, HttpStatus.OK );
+        return new ResponseEntity<>( userService.getUserDTOById( id ), HttpStatus.OK );
     }
-
 
     /*
      * LOGIN
@@ -168,4 +158,11 @@ public class UserController {
         return new ResponseEntity<>( userService.getByEmailContains( email,pageNo, pageSize, sortBy, sortDir), HttpStatus.OK );
     }
 
+
+    @GetMapping("/profile/{userId}")
+    @PreAuthorize( "hasRole('READ')" )
+    public ResponseEntity<ProfileDTO> getProfileByUserId( @PathVariable("userId") Long userId ) {
+
+        return new ResponseEntity<>( userService.getProfileByUserId( userId ), HttpStatus.OK );
+    }
 }
