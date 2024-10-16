@@ -300,14 +300,8 @@ public class UserServiceImpl implements UserService {
         // Paginazione
         Pageable pageable = PageRequest.of( pageNo, pageSize, sort );
 
-        // Utente che effettua la richiesta
-        User user = getUserByAuthentication();
-
-        // Potere dell'utente che effettua la richiesta
-        int powerOfuser = user.getProfile().getPower();
-
         // Lista di tutti gli utenti
-        Page<User> userPageList = findByProfilePowerGreaterThanEqual( powerOfuser, pageable );
+        Page<User> userPageList = userRepository.findAll( pageable );
 
         // Lista filtrata in base al potere dell'utente che effettua la richiesta
         // tutti quelli con poteri maggiori o uguali a quelli del richiedente
