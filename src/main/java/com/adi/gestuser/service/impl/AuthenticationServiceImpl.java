@@ -192,7 +192,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user;
 
         // Se il token è diverso da null, allora l'utente ha richiesto il cambio password tramite email.
-        if (token != null) {
+        if (token != null && !token.isEmpty()) {
             Confirmation confirmation = verifyToken(token, TokenType.password);
 
             user = confirmation.getUser();

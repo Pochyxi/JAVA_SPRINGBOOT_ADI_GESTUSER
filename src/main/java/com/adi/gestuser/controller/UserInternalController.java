@@ -1,9 +1,6 @@
 package com.adi.gestuser.controller;
 
-import com.adi.gestuser.dto.ProfileDTO;
-import com.adi.gestuser.dto.ProfilePermissionDTO;
-import com.adi.gestuser.dto.SignupDTO;
-import com.adi.gestuser.dto.UserDTOInternal;
+import com.adi.gestuser.dto.*;
 import com.adi.gestuser.enums.TokenType;
 import com.adi.gestuser.service.AuthenticationService;
 import com.adi.gestuser.service.UserService;
@@ -103,5 +100,65 @@ public class UserInternalController {
         aut.verifyToken( token, TokenType.valueOf(tokentype));
 
         return new ResponseEntity<>( HttpStatus.OK );
+    }
+
+    /**
+     * CHANGE PASSWORD
+     * Questo metodo permette di modificare la password
+     * PREAUTHORIZATION:
+     * 1 - E' possibile cambiare la password avendo a disposizione il token inviato tramite email
+     * 2 - Attraverso autenticazione specificando username e vecchia password
+     */
+    @PutMapping(value = "/change_password")
+    @PreAuthorize( "hasRole('WRITE')" )
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO,
+                                               @RequestParam(value = "token", required = false) String token ) {
+        aut.changePassword( changePasswordDTO, token );
+
+        return new ResponseEntity<>( HttpStatus.OK );
+    }
+
+    /**
+     * CHANGE EMAIL
+     * Questo metodo permette di modificare l'email
+     * PREAUTHORIZATION:
+     * Utente con permesso USER_UPDATE
+     */
+    @PutMapping(value = "/change_email")
+    @PreAuthorize("hasRole('WRITE')")
+    public ResponseEntity<Void> changeEmail(@RequestParam Long userId,
+                                            @RequestParam String email){
+        aut.changeEmail( userId, email );
+
+        return new ResponseEntity<>( HttpStatus.OK );
+    }
+
+
+    /**
+     * RECOVERY PASSWORD
+     * Questo metodo permette di recuperare la password
+     * PREAUTHORIZATION:
+     * NONE
+     */
+    @GetMapping(value = "/recovery_password")
+    @PreAuthorize("hasRole('READ')")
+    public ResponseEntity<Void> recovery(@RequestParam("email") String email) {
+        aut.resetPasswordRequest(email);
+
+        return new ResponseEntity<> (HttpStatus.OK);
+    }
+
+
+    /**
+     * RESEND VERIFICATION
+     * Questo metodo permette di inviare nuovamente la mail di verifica
+     * PREAUTHORIZATION:
+     * Utente con permesso WRITE
+     */
+    @PutMapping(value = "/resend_verification")
+    @PreAuthorize("hasRole('WRITE')")
+    public ResponseEntity<Void> resendVerification(@RequestParam Long userId) {
+        aut.resendVerificationRequest(userId);
+        return new ResponseEntity<> (HttpStatus.OK);
     }
 }
