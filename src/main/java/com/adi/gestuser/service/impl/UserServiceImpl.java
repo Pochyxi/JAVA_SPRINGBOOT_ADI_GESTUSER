@@ -338,11 +338,8 @@ public class UserServiceImpl implements UserService {
 
         Pageable pageable = PageRequest.of( pageNo, pageSize, sort );
 
-        User user = getUserByAuthentication();
 
-        int powerOfuser = user.getProfile().getPower();
-
-        Page<User> userPageList = userRepository.findByEmailContainsIgnoreCaseAndProfilePowerGreaterThanEqual( pageable, email, powerOfuser );
+        Page<User> userPageList = userRepository.findByEmailContainsIgnoreCase( pageable, email );
 
 
         List<User> userList = userPageList.getContent();

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -55,12 +56,31 @@ public class UsersMockInit {
     public void initUsers() {
         initPermissions();
 
-        createUsers();
+        String darioMail = "dario@dad.it";
+        String darioUsername = "Dario";
 
-        User admin = unlockUser();
+        String adminMail = "Admin@gmail.com";
+        String adminUsername = "Admin";
 
+        String adiMail = "Adiener@gmail.com";
+        String adiUsername = "Adiener";
 
-        setAllPermissions( admin.getProfile() );
+        SignupDTO admin = new SignupDTO();
+        admin.setEmail( adminMail );
+        admin.setUsername( adminUsername );
+
+        SignupDTO adi = new SignupDTO();
+        adi.setEmail( adiMail );
+        adi.setUsername( adiUsername );
+
+        SignupDTO dario = new SignupDTO();
+        dario.setEmail( darioMail );
+        dario.setUsername( darioUsername );
+
+        List<SignupDTO> listofAdminUsers = List.of( admin, adi );
+        List<SignupDTO> listofUsers = List.of( dario );
+
+        createUsers( listofAdminUsers, listofUsers );
     }
 
     private void initPermissions() {
@@ -77,26 +97,34 @@ public class UsersMockInit {
         logger.info("PERMESSI INIZIALIZZATI CORRETTAMENTE");
     }
 
-    private void createUsers() {
+    private void createUsers( List<SignupDTO> listofAdminUsers, List<SignupDTO> listofUsers ) {
 
         Faker faker = new Faker();
 
-        String adminMail = "Admin@gmail.com";
-        String adminUsername = "Admin";
-
-        String adiMail = "Adiener@gmail.com";
-        String adiUsername = "Adiener";
-
 
         for( int i = 0 ; userRepository.count() < 101 ; i++ ) {
-            logger.info( "Utenti inizializzati: " + i );
+            logger.info( "Utenti inizializzati: {}", i );
 
             if( i == 0 ) {
-                checkAndCreateUser( adminMail, adminUsername, i );
-                continue;
-            }
-            if( i == 1 ) {
-                checkAndCreateUser( adiMail, adiUsername, i );
+                for( SignupDTO signupDTO : listofAdminUsers ) {
+                    User userCreated = checkAndCreateUser( signupDTO.getEmail(), signupDTO.getUsername(), i );
+
+                    if( userCreated != null ) {
+                        Profile profile = unlockAdmin( userCreated.getEmail() );
+                        setAllPermissions( profile );
+                    }
+
+                }
+
+                for( SignupDTO signupDTO : listofUsers ) {
+                    User userCreated = checkAndCreateUser( signupDTO.getEmail(), signupDTO.getUsername(), i );
+
+                    if( userCreated != null ) {
+                        Profile profile = unlockUser( userCreated.getEmail() );
+                        setUserAllPermissions( profile );
+                    }
+                }
+
                 continue;
             }
 
@@ -105,13 +133,12 @@ public class UsersMockInit {
             String username = faker.name().username();
 
             checkAndCreateUser( email, username, i );
-
         }
     }
 
-    private User unlockUser() {
+    private Profile unlockAdmin( String email) {
         // Sblocco utente Admin
-        User userAdmin = userRepository.findByEmail( "Adiener@gmail.com" ).orElseThrow();
+        User userAdmin = userRepository.findByEmail( email ).orElseThrow();
         userAdmin.setEnabled(true);
         userAdmin.setTemporaryPassword( false );
 
@@ -120,7 +147,23 @@ public class UsersMockInit {
         profileAdmin.setName( ProfileList.ADMIN );
         profileAdmin.setPower( 0 );
         userAdmin.setProfile( profileAdmin );
-        return userRepository.save( userAdmin );
+        User userSaved = userRepository.save( userAdmin );
+        return userSaved.getProfile();
+    }
+
+    private Profile unlockUser( String email) {
+        // Sblocco utente User
+        User userAdmin = userRepository.findByEmail( email ).orElseThrow();
+        userAdmin.setEnabled(true);
+        userAdmin.setTemporaryPassword( false );
+
+        // Creazione profilo User
+        Profile profileAdmin = userAdmin.getProfile();
+        profileAdmin.setName( ProfileList.USER );
+        profileAdmin.setPower( 1 );
+        userAdmin.setProfile( profileAdmin );
+        User userSaved = userRepository.save( userAdmin );
+        return userSaved.getProfile();
     }
 
     private void setAllPermissions( Profile profileAdmin ) {
@@ -129,25 +172,32 @@ public class UsersMockInit {
         }
     }
 
-    private void checkAndCreateUser( String email, String username, int i ) {
+    private void setUserAllPermissions( Profile profileUser ) {
+
+        giveAllPermissions( profileUser.getId(), PermissionList.USER );
+    }
+
+    private User checkAndCreateUser( String email, String username, int i ) {
 
         boolean userCheck = userService.existsByUsernameOrEmail( username, email );
 
         if( !userCheck ) {
-            createUser( email, username );
             logger.info( "[" + i + "] Utente inizializzato: " + email );
+            return createUser( email, username );
         } else {
             logger.warn( "Utente ESISTENTE: " + email );
         }
+
+        return null;
     }
 
-    private void createUser( String email, String username ) {
+    private User createUser( String email, String username ) {
         SignupDTO signupDTO = new SignupDTO();
         signupDTO.setEmail( email );
         signupDTO.setUsername( username );
 
 
-        authenticationService.createUser( signupDTO, false );
+        return authenticationService.createUser( signupDTO, false );
     }
 
 
