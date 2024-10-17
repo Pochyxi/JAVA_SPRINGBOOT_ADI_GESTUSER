@@ -12,7 +12,6 @@ import java.util.Set;
 public interface UserService {
 
     // VOID RETURNS
-    void createUser( SignupDTO signupDTO, boolean confEmail);
     void createUser(User user);
     void deleteUser(Long id );
 

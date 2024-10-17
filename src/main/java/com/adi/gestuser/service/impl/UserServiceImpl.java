@@ -3,16 +3,11 @@ package com.adi.gestuser.service.impl;
 import com.adi.gestuser.dto.*;
 import com.adi.gestuser.entity.*;
 import com.adi.gestuser.enums.PermissionList;
-import com.adi.gestuser.enums.ProfileList;
-import com.adi.gestuser.enums.TokenType;
 import com.adi.gestuser.exception.ErrorCodeList;
 import com.adi.gestuser.exception.ResourceNotFoundException;
 import com.adi.gestuser.exception.appException;
 import com.adi.gestuser.repository.*;
-import com.adi.gestuser.service.EmailService;
 import com.adi.gestuser.service.UserService;
-import com.adi.gestuser.utils.FirstPasswordGenerator;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +16,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -41,78 +35,12 @@ public class UserServiceImpl implements UserService {
 
     private final ProfilePermissionRepository profilePermissionRepository;
 
-    private final PasswordEncoder passwordEncoder;
 
-    private final ConfirmationRepository confirmationRepository;
+    // VOID RETURNS //
 
-    private final EmailService emailService;
-
-
-    // VOID RETURNS
-
-    /* SIGNUP
-     * Questo metodo gestisce il processo di registrazione di un utente.
+    /* CREATE USER
+     * Creazione di un utente
      */
-    @Override
-    @Transactional
-    public void createUser( SignupDTO signupDTO, boolean confEmail ) {
-
-        // Controlla se l'username o l'email forniti esistono nel database.
-        if( existsByUsername( signupDTO.getUsername() ) ) {
-            throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.EXISTINGUSERNAME );
-        }
-
-        if( existsByEmail( signupDTO.getEmail() ) ) {
-            throw new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.EXISTINGEMAIL );
-        }
-
-
-        // Crea un nuovo oggetto User e popola i suoi campi con i valori forniti.
-        User user = new User();
-        user.setUsername( signupDTO.getUsername() );
-        user.setEmail( signupDTO.getEmail() );
-        user.setEnabled( false );
-        String temporaryPassword = FirstPasswordGenerator.generatePass();
-        user.setPassword( passwordEncoder.encode( temporaryPassword ) );
-        user.setTemporaryPassword( true );
-
-        // Salva l'utente nel database.
-        user = save( user );
-
-        // Crea un nuovo oggetto Confirmation e popola i suoi campi con l'utente.
-        Confirmation confirmation = new Confirmation( user );
-        confirmation.setTokenType( TokenType.email );
-        // Salva la conferma nel database.
-        confirmationRepository.save( confirmation );
-
-        // todo: eliminare in produzione
-        // Invia un'email all'utente con il token di conferma e la password temporanea.
-        // condizione creata ai fini della generazione automatica degli utenti
-        if( confEmail ) {
-
-            emailService.sendMailMessage(
-                    user.getUsername(),
-                    user.getEmail(),
-                    confirmation.getToken(),
-                    temporaryPassword,
-                    "Richiesta di verifica Account e password temporanea"
-            );
-        } else {
-            user.setPassword( passwordEncoder.encode( "Admin94!" ) );
-        }
-
-        // Crea un nuovo oggetto Profile e popola i suoi campi con l'utente.
-        // DEFAULT: DIPENDENTE
-        Profile userProfile = new Profile( ProfileList.USER );
-
-        // Salva il profilo nel database.
-        userProfile.setUser( user );
-
-        // Salva il profilo nel database.
-        profileRepository.save( userProfile );
-
-    }
-
     @Override
     public void createUser( User user ) {
         userRepository.save( user );
@@ -130,7 +58,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    // USER RETURNS
+    // USER RETURNS //
 
     /* SAVE USER
      * Salvataggio di un utente

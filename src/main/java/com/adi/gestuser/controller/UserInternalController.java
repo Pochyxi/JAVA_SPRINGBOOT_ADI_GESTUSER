@@ -4,6 +4,8 @@ import com.adi.gestuser.dto.ProfileDTO;
 import com.adi.gestuser.dto.ProfilePermissionDTO;
 import com.adi.gestuser.dto.SignupDTO;
 import com.adi.gestuser.dto.UserDTOInternal;
+import com.adi.gestuser.enums.TokenType;
+import com.adi.gestuser.service.AuthenticationService;
 import com.adi.gestuser.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.Set;
 public class UserInternalController {
 
     private final UserService userService;
+    private final AuthenticationService aut;
 
 
     /*
@@ -47,7 +50,7 @@ public class UserInternalController {
     @PostMapping(value = "/signup")
     @PreAuthorize( "hasRole('WRITE')" )
     public ResponseEntity<Void> signup(@Valid @RequestBody SignupDTO signupDTO ) {
-        userService.createUser( signupDTO, true );
+        aut.createUser( signupDTO, true );
 
         return new ResponseEntity<>(HttpStatus.CREATED );
     }
@@ -90,5 +93,15 @@ public class UserInternalController {
     public ResponseEntity<ProfileDTO> getProfileByUserId( @PathVariable("userId") Long userId ) {
 
         return new ResponseEntity<>( userService.getProfileByUserId( userId ), HttpStatus.OK );
+    }
+
+
+    @GetMapping(value = "/verify")
+    @PreAuthorize( "hasRole('READ')" )
+    public ResponseEntity<Void> confirm(@RequestParam("token") String token,
+                                        @RequestParam("tokentype")String tokentype) {
+        aut.verifyToken( token, TokenType.valueOf(tokentype));
+
+        return new ResponseEntity<>( HttpStatus.OK );
     }
 }

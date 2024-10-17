@@ -241,7 +241,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Recupera la conferma dal database.
         Confirmation confirmation = confirmationRepository.findByToken(token);
 
-        if(!confirmation.getTokenType().equals(tokenType)){
+        if( confirmation == null || !confirmation.getTokenType().equals(tokenType)){
             throw new appException(HttpStatus.BAD_REQUEST, ErrorCodeList.INVALID_TOKEN);
         }
 
