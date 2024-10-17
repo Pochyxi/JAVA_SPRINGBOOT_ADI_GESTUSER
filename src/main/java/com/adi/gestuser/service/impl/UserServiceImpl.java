@@ -219,7 +219,7 @@ public class UserServiceImpl implements UserService {
      * Questo metodo restituisce una lista di tutti gli utenti presenti nel database.
      */
     @Override
-    public PagedResponseDTO<UserDTO> getAllUsers( int pageNo, int pageSize, String sortBy, String sortDir ) {
+    public PagedResponseDTO<UserDTO> getAllUsers( int pageNo, int pageSize, String sortBy, String sortDir, int powerOfUser ) {
 
         // Ordinamento
         Sort sort = sortDir.equalsIgnoreCase( Sort.Direction.ASC.name() ) ? Sort.by( sortBy ).ascending()
@@ -229,7 +229,8 @@ public class UserServiceImpl implements UserService {
         Pageable pageable = PageRequest.of( pageNo, pageSize, sort );
 
         // Lista di tutti gli utenti
-        Page<User> userPageList = userRepository.findAll( pageable );
+        Page<User> userPageList =
+                userRepository.findAllByProfilePowerGreaterThanEqual( powerOfUser, pageable );
 
         // Lista filtrata in base al potere dell'utente che effettua la richiesta
         // tutti quelli con poteri maggiori o uguali a quelli del richiedente

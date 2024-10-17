@@ -29,7 +29,7 @@ public class UserInternalController {
      * Utente con permesso READ
      */
     @GetMapping(value = "/username_email/{username_email}")
-    @PreAuthorize( "hasRole('READ')" )
+    @PreAuthorize("hasAnyRole('ROLE_READ', 'ROLE_WRITE')")
     public ResponseEntity<UserDTOInternal> findByUsernameOrEmail( @PathVariable("username_email") String username_email) {
         UserDTOInternal user = userService.findDTOByUsernameOrEmail( username_email, username_email );
 
@@ -45,7 +45,7 @@ public class UserInternalController {
      * NONE
      */
     @PostMapping(value = "/signup")
-    @PreAuthorize( "hasRole('WRITE')" )
+    @PreAuthorize( "hasRole('ROLE_WRITE')" )
     public ResponseEntity<Void> signup(@Valid @RequestBody SignupDTO signupDTO ) {
         aut.createUser( signupDTO, true );
 
@@ -61,7 +61,7 @@ public class UserInternalController {
      * Utente con permesso READ
      */
     @GetMapping(value = "/username_email/exist/{username_email}")
-    @PreAuthorize( "hasRole('READ')" )
+    @PreAuthorize("hasAnyRole('READ', 'WRITE')")
     public ResponseEntity<Boolean> existsByUsernameOrEmail( @PathVariable("username_email") String username_email) {
         return new ResponseEntity<>( userService.existsByUsernameOrEmail( username_email, username_email ), HttpStatus.OK );
     }
@@ -74,7 +74,7 @@ public class UserInternalController {
      * Utente con permesso READ
      */
     @GetMapping(value = "/profile_permissions/{profileId}")
-    @PreAuthorize( "hasRole('READ')" )
+    @PreAuthorize("hasAnyRole('READ', 'WRITE')")
     public ResponseEntity<Set<ProfilePermissionDTO>> findByProfileId( @PathVariable("profileId") Long profileId) {
         return new ResponseEntity<>( userService.findByProfileIdDTO( profileId ), HttpStatus.OK );
     }
@@ -86,7 +86,7 @@ public class UserInternalController {
      * Utente con permesso READ
      */
     @GetMapping("/profile/{userId}")
-    @PreAuthorize( "hasRole('READ')" )
+    @PreAuthorize("hasAnyRole('READ', 'WRITE')")
     public ResponseEntity<ProfileDTO> getProfileByUserId( @PathVariable("userId") Long userId ) {
 
         return new ResponseEntity<>( userService.getProfileByUserId( userId ), HttpStatus.OK );
@@ -94,7 +94,7 @@ public class UserInternalController {
 
 
     @GetMapping(value = "/verify")
-    @PreAuthorize( "hasRole('READ')" )
+    @PreAuthorize("hasAnyRole('READ', 'WRITE')")
     public ResponseEntity<Void> confirm(@RequestParam("token") String token,
                                         @RequestParam("tokentype")String tokentype) {
         aut.verifyToken( token, TokenType.valueOf(tokentype));
@@ -141,7 +141,7 @@ public class UserInternalController {
      * NONE
      */
     @GetMapping(value = "/recovery_password")
-    @PreAuthorize("hasRole('READ')")
+    @PreAuthorize("hasAnyRole('READ', 'WRITE')")
     public ResponseEntity<Void> recovery(@RequestParam("email") String email) {
         aut.resetPasswordRequest(email);
 

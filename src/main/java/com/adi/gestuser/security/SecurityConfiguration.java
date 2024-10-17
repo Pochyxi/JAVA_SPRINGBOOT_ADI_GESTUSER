@@ -8,29 +8,14 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
-import org.springframework.web.cors.CorsConfiguration;
-
-import java.util.List;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfiguration {
-
-    private final SecurityProperties securityProperties;
-    private final PasswordEncoder passwordEncoder;
-
-    public SecurityConfiguration(SecurityProperties securityProperties, PasswordEncoder passwordEncoder) {
-        this.securityProperties = securityProperties;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Bean
     public static PasswordEncoder passwordEncoder() {
@@ -43,53 +28,19 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        String REALM = "REAME";
+    public SecurityFilterChain securityFilterChain( HttpSecurity http, ApiKeyAuthFilter apiKeyAuthFilter ) throws Exception {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .httpBasic(httpBasic -> httpBasic
-                        .realmName(REALM)
-                        .authenticationEntryPoint(getBasicAuthEntryPoint())
-                )
+                .addFilterBefore( apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
         return http.build();
-    }
-
-    @Bean
-    public BasicAuthenticationEntryPoint getBasicAuthEntryPoint() {
-        AuthEntryPoint entryPoint = new AuthEntryPoint();
-        entryPoint.setRealmName("REAME");
-        return entryPoint;
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-
-        UserDetails readUser = User.builder()
-                .username(securityProperties.getRead().getUsername())
-                .password(passwordEncoder.encode(securityProperties.getRead().getPassword()))
-                .roles("READ")
-                .build();
-
-        UserDetails writeUser = User.builder()
-                .username(securityProperties.getWrite().getUsername())
-                .password(passwordEncoder.encode(securityProperties.getWrite().getPassword()))
-                .roles("READ", "WRITE")
-                .build();
-
-        manager.createUser(readUser);
-        manager.createUser(writeUser);
-
-        return manager;
     }
 }
 

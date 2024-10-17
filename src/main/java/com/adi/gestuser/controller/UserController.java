@@ -23,7 +23,7 @@ public class UserController {
      * Utente con permesso USER_READ e potere più alto sull'utente specificato
      */
     @GetMapping(value = "/{id}")
-    @PreAuthorize( "hasRole('READ')" )
+    @PreAuthorize("hasAnyRole('READ', 'WRITE')")
     public ResponseEntity<UserDTO> getUserById( @PathVariable("id") Long id ) {
 
         return new ResponseEntity<>( userService.getUserDTOById( id ), HttpStatus.OK );
@@ -37,15 +37,16 @@ public class UserController {
             * Utente con permesso USER_READ e potere più alto degli utenti richiesti
      */
     @GetMapping(value = "/all")
-    @PreAuthorize( "hasRole('READ')" )
+    @PreAuthorize("hasAnyRole('ROLE_READ', 'ROLE_WRITE')")
     public ResponseEntity<PagedResponseDTO<UserDTO>> getAllUsers(
             @RequestParam(value = "pageNo", defaultValue = "${app.pagination.default_pageNumber}") int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "${app.pagination.default_pageSize}") int pageSize,
             @RequestParam(value = "sortBy", defaultValue = "${app.pagination.default_sortBy}", required = false) String sortBy,
-            @RequestParam(value = "sortOrder", defaultValue = "${app.pagination.default_sortDirection}") String sortDir
+            @RequestParam(value = "sortOrder", defaultValue = "${app.pagination.default_sortDirection}") String sortDir,
+            @RequestParam(value = "powerOfUser") Integer powerOfUser
     ) {
 
-        return new ResponseEntity<>( userService.getAllUsers( pageNo, pageSize, sortBy, sortDir ), HttpStatus.OK );
+        return new ResponseEntity<>( userService.getAllUsers( pageNo, pageSize, sortBy, sortDir, powerOfUser ), HttpStatus.OK );
     }
 
 
@@ -56,7 +57,7 @@ public class UserController {
         * Utente con permesso USER_UPDATE e potere più alto sull'utente specificato
      */
     @PutMapping("/update/{id}")
-    @PreAuthorize( "hasRole('WRITE')" )
+    @PreAuthorize("hasRole('ROLE_WRITE')")
     public ResponseEntity<UserDTO> modifyUser( @PathVariable("id") Long id,
                                                @RequestBody UserDTO userDTO ) {
 
@@ -71,7 +72,7 @@ public class UserController {
         * Utente con permesso USER_DELETE e potere più alto sull'utente specificato
      */
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize( "hasRole('WRITE')" )
+    @PreAuthorize( "hasRole('ROLE_WRITE')" )
     public ResponseEntity<Void> deleteUser( @PathVariable("id") Long id ) {
         userService.deleteUser( id );
 
@@ -79,7 +80,7 @@ public class UserController {
     }
 
     @GetMapping("/email_contains/{email}")
-    @PreAuthorize( "hasRole('READ')" )
+    @PreAuthorize("hasRole('ROLE_READ')")
     public ResponseEntity<PagedResponseDTO<UserDTO>> getByEmailContains(
             @PathVariable("email") String email,
             @RequestParam(value = "pageNo", defaultValue = "${app.pagination.default_pageNumber}") int pageNo,

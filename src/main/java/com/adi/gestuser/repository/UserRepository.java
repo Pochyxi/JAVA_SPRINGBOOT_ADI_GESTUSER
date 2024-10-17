@@ -24,6 +24,8 @@ public interface UserRepository extends JpaRepository<User,Long>, JpaSpecificati
 
     Page<User> findByProfilePowerGreaterThanEqual( int power, Pageable page);
 
+    Page<User> findAllByProfilePowerGreaterThanEqual( int power, Pageable page);
+
     Page<User>findByEmailContainsIgnoreCaseAndProfilePowerGreaterThanEqual( Pageable page, String email, int power);
 
     Page<User>findByEmailContainsIgnoreCase( Pageable page, String email);

@@ -50,7 +50,7 @@ public interface UserService {
     // DTO RETURNS
     UserDTO getUserDTOById( Long id );
 
-    PagedResponseDTO<UserDTO> getAllUsers( int pageNo, int pageSize, String sortBy, String sortDir );
+    PagedResponseDTO<UserDTO> getAllUsers( int pageNo, int pageSize, String sortBy, String sortDir, int powerOfUser);
 
     PagedResponseDTO<UserDTO> getByEmailContains( String email, int pageNo, int pageSize, String sortBy, String sortDir);
 
