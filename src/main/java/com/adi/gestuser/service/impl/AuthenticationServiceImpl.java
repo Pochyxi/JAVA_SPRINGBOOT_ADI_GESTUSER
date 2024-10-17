@@ -1,8 +1,6 @@
 package com.adi.gestuser.service.impl;
 
 import com.adi.gestuser.dto.ChangePasswordDTO;
-import com.adi.gestuser.dto.JwtAuthResponseDTO;
-import com.adi.gestuser.dto.LoginDTO;
 import com.adi.gestuser.dto.SignupDTO;
 import com.adi.gestuser.entity.Confirmation;
 import com.adi.gestuser.entity.Profile;
@@ -14,7 +12,6 @@ import com.adi.gestuser.exception.ResourceNotFoundException;
 import com.adi.gestuser.exception.appException;
 import com.adi.gestuser.repository.ConfirmationRepository;
 import com.adi.gestuser.repository.ProfileRepository;
-import com.adi.gestuser.security.JwtTokenProvider;
 import com.adi.gestuser.service.AuthenticationService;
 import com.adi.gestuser.service.EmailService;
 import com.adi.gestuser.service.UserService;
@@ -22,10 +19,6 @@ import com.adi.gestuser.utils.FirstPasswordGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,55 +30,15 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final AuthenticationManager authenticationManager;
-
     private final UserService userService;
 
     private final PasswordEncoder passwordEncoder;
-
-    private final JwtTokenProvider jwtTokenProvider;
 
     private final ProfileRepository profileRepository;
 
     private final ConfirmationRepository confirmationRepository;
 
     private final EmailService emailService;
-
-
-    /* LOGIN
-        * Questo metodo gestisce il processo di autenticazione di un utente.
-     */
-    @Override
-    public JwtAuthResponseDTO login( LoginDTO loginDTO) {
-
-        // Controlla se l'username o l'email forniti esistono nel database.
-        if (!userService.existsByUsernameOrEmail(loginDTO.getUsernameOrEmail(), loginDTO.getUsernameOrEmail())) {
-            throw new appException(HttpStatus.BAD_REQUEST, ErrorCodeList.BADCREDENTIALS);
-        }
-
-        // Autentica l'utente utilizzando l'oggetto AuthenticationManager.
-        Authentication authentication =
-                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDTO
-                        .getUsernameOrEmail(), loginDTO.getPassword()));
-
-        // Imposta l'oggetto Authentication nel SecurityContext.
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Recupera l'utente dal database
-        User user = userService.findByUsernameOrEmail(loginDTO.getUsernameOrEmail(), loginDTO.getUsernameOrEmail())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        ErrorCodeList.NF404
-                ));
-
-        // Crea un nuovo oggetto JwtAuthResponseDTO e popola i suoi campi con il token di accesso e l'utente.
-        JwtAuthResponseDTO jwtAuthResponseDTO = new JwtAuthResponseDTO();
-        jwtAuthResponseDTO.setAccessToken(jwtTokenProvider.generateToken(authentication));
-        jwtAuthResponseDTO.setUser( userService.mapUserToDTO( user ) );
-
-
-        // Restituisce l'oggetto JwtAuthResponseDTO.
-        return jwtAuthResponseDTO;
-    }
 
     /* SIGNUP
      * Questo metodo gestisce il processo di registrazione di un utente.
