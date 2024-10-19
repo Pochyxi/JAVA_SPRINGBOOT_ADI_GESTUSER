@@ -29,7 +29,15 @@ public class ApiKeyDataLoader implements CommandLineRunner {
         apiKeyWrite.setExpireDate(LocalDateTime.now().plusDays(30));
         apiKeyWrite.setApikeyRole(ApikeyRole.WRITE);
 
-        apiKeyRepository.save(apiKeyRead);
-        apiKeyRepository.save(apiKeyWrite);
+        saveAPikeyIfNotExists(apiKeyRead);
+        saveAPikeyIfNotExists(apiKeyWrite);
+    }
+
+    private void saveAPikeyIfNotExists(ApiKey apiKey) {
+        ApiKey apiKeyFound = apiKeyRepository.findByApikey(apiKey.getApikey());
+
+        if (apiKeyFound == null) {
+            apiKeyRepository.save(apiKey);
+        }
     }
 }
