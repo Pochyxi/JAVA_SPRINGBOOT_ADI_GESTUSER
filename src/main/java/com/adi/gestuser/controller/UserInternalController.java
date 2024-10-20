@@ -1,6 +1,7 @@
 package com.adi.gestuser.controller;
 
 import com.adi.gestuser.dto.*;
+import com.adi.gestuser.entity.User;
 import com.adi.gestuser.enums.TokenType;
 import com.adi.gestuser.service.AuthenticationService;
 import com.adi.gestuser.service.UserService;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.Set;
 
 @RestController
@@ -20,6 +22,26 @@ public class UserInternalController {
 
     private final UserService userService;
     private final AuthenticationService aut;
+
+
+    @GetMapping(value = "/create")
+    @PreAuthorize("hasAnyRole('ROLE_READ', 'ROLE_WRITE')")
+    public ResponseEntity<UserDTO> createUser( @RequestBody SignupDTO signupDTO ) {
+        User user = aut.createUser( signupDTO, true );
+        UserDTO userDTO = userService.mapUserToDTO( user );
+
+        return new ResponseEntity<>( userDTO, HttpStatus.OK );
+    }
+
+    @GetMapping(value = "/findByEmail/{email}")
+    @PreAuthorize("hasAnyRole('ROLE_READ', 'ROLE_WRITE')")
+    public ResponseEntity<UserDTO> findByEmail( @PathVariable("email") String email) {
+        Optional<User> user = userService.findByEmail( email );
+
+        return user.map( value -> new ResponseEntity<>( userService.mapUserToDTO( value ), HttpStatus.OK ) )
+                .orElseGet( () -> new ResponseEntity<>( HttpStatus.NOT_FOUND ) );
+
+    }
 
 
     /*
