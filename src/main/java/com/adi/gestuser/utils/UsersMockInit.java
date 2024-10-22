@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -36,8 +37,8 @@ public class UsersMockInit {
     private final PermissionRepository permissionRepository;
     private final ProfilePermissionRepository profilePermissionRepository;
 
-    List<SignupDTO> listofAdminUsers;
-    List<SignupDTO> listofUsers;
+    List<SignupDTO> listofAdminUsers = new ArrayList<>();
+    List<SignupDTO> listofUsers = new ArrayList<>();
 
     @Autowired
     public UsersMockInit( UserService userService,
