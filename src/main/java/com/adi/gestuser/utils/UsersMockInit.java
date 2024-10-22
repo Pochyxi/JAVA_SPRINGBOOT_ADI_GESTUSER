@@ -36,6 +36,8 @@ public class UsersMockInit {
     private final PermissionRepository permissionRepository;
     private final ProfilePermissionRepository profilePermissionRepository;
 
+    List<SignupDTO> listofAdminUsers;
+    List<SignupDTO> listofUsers;
 
     @Autowired
     public UsersMockInit( UserService userService,
@@ -65,24 +67,24 @@ public class UsersMockInit {
         String adiMail = "Adiener@gmail.com";
         String adiUsername = "Adiener";
 
-        SignupDTO admin = new SignupDTO();
-        admin.setEmail( adminMail );
-        admin.setUsername( adminUsername );
-
-        SignupDTO adi = new SignupDTO();
-        adi.setEmail( adiMail );
-        adi.setUsername( adiUsername );
-
-        SignupDTO dario = new SignupDTO();
-        dario.setEmail( darioMail );
-        dario.setUsername( darioUsername );
-
-        List<SignupDTO> listofAdminUsers = List.of( admin, adi );
-        List<SignupDTO> listofUsers = List.of( dario );
+        populateListOfUsersOrAdmin( listofAdminUsers, adminMail, adminUsername );
+        populateListOfUsersOrAdmin( listofAdminUsers, adiMail, adiUsername );
+        populateListOfUsersOrAdmin( listofUsers, darioMail, darioUsername );
 
         createUsers( listofAdminUsers, listofUsers );
     }
 
+    // Metodo per popolare la lista degli utenti, sia admin che users
+    private void populateListOfUsersOrAdmin( List<SignupDTO> list, String email, String username ) {
+        SignupDTO dto = SignupDTO.builder()
+                .email( email )
+                .username( username )
+                .build();
+
+        list.add( dto );
+    }
+
+    // Inizializzazione di tutti i permessi
     private void initPermissions() {
         for ( PermissionList perm : PermissionList.values()) {
             permissionRepository.findByName(perm)
@@ -97,11 +99,20 @@ public class UsersMockInit {
         logger.info("PERMESSI INIZIALIZZATI CORRETTAMENTE");
     }
 
+
+    /**
+     * Metodo per creare gli utenti
+     * @param listofAdminUsers la lista degli utenti admin
+     * @param listofUsers la lista degli utenti
+     */
     private void createUsers( List<SignupDTO> listofAdminUsers, List<SignupDTO> listofUsers ) {
 
+        // Creo un faker per generare email e username
         Faker faker = new Faker();
 
 
+        // Creo 100 utenti di cui all'indice 0 verranno creati gi admin
+        // e gli utenti di esempio abilitati
         for( int i = 0 ; userRepository.count() < 101 ; i++ ) {
             logger.info( "Utenti inizializzati: {}", i );
 
@@ -110,7 +121,7 @@ public class UsersMockInit {
                     User userCreated = checkAndCreateUser( signupDTO.getEmail(), signupDTO.getUsername(), i );
 
                     if( userCreated != null ) {
-                        Profile profile = unlockAdmin( userCreated.getEmail() );
+                        Profile profile = unlockUserSetProfile( userCreated.getEmail(), ProfileList.ADMIN );
                         setAllPermissions( profile );
                     }
 
@@ -120,8 +131,12 @@ public class UsersMockInit {
                     User userCreated = checkAndCreateUser( signupDTO.getEmail(), signupDTO.getUsername(), i );
 
                     if( userCreated != null ) {
-                        Profile profile = unlockUser( userCreated.getEmail() );
-                        setUserAllPermissions( profile );
+                        Profile profile = unlockUserSetProfile( userCreated.getEmail(), ProfileList.USER );
+
+                        if( profile != null ) {
+                            setUserAllPermissions( profile );
+
+                        }
                     }
                 }
 
@@ -136,61 +151,84 @@ public class UsersMockInit {
         }
     }
 
-    private Profile unlockAdmin( String email) {
-        // Sblocco utente Admin
-        User userAdmin = userRepository.findByEmail( email ).orElseThrow();
-        userAdmin.setEnabled(true);
-        userAdmin.setTemporaryPassword( false );
+    /**
+     * Metodo per sbloccare un utente e settare il profilo
+     * Dato che esistono solo 2 profili, il potere sarà o 0 o 10
+     * @param email email dell'utente
+     * @param profileList il profilo da settare
+     * @return il profilo settato
+     */
+    private Profile unlockUserSetProfile(String email, ProfileList profileList) {
+        Optional<User> userFound = userRepository.findByEmail(email);
 
-        // Creazione profilo Admin
-        Profile profileAdmin = userAdmin.getProfile();
-        profileAdmin.setName( ProfileList.ADMIN );
-        profileAdmin.setPower( 0 );
-        userAdmin.setProfile( profileAdmin );
-        User userSaved = userRepository.save( userAdmin );
+        if( userFound.isEmpty() ) {
+            logger.warn("Utente non trovato: {}", email);
+            return null;
+        }
+
+        User userToUnlock = userFound.get();
+        userToUnlock.setEnabled(true);
+        userToUnlock.setTemporaryPassword(false);
+
+        Profile profile = userToUnlock.getProfile();
+        profile.setName(profileList);
+        int profilePower = profileList.equals( ProfileList.ADMIN ) ? 0 : 10;
+        profile.setPower(profilePower);
+
+        userToUnlock.setProfile(profile);
+
+        User userSaved = userRepository.save(userToUnlock);
+
         return userSaved.getProfile();
     }
 
-    private Profile unlockUser( String email) {
-        // Sblocco utente User
-        User userAdmin = userRepository.findByEmail( email ).orElseThrow();
-        userAdmin.setEnabled(true);
-        userAdmin.setTemporaryPassword( false );
 
-        // Creazione profilo User
-        Profile profileAdmin = userAdmin.getProfile();
-        profileAdmin.setName( ProfileList.USER );
-        profileAdmin.setPower( 1 );
-        userAdmin.setProfile( profileAdmin );
-        User userSaved = userRepository.save( userAdmin );
-        return userSaved.getProfile();
-    }
-
+    /**
+     * Metodo per fornire tutti i permessi ad un profilo ADMIN
+     * @param profileAdmin il profilo admin
+     */
     private void setAllPermissions( Profile profileAdmin ) {
         for( PermissionList permissionName : PermissionList.values() ) {
             giveAllPermissions( profileAdmin.getId(), permissionName );
         }
     }
 
+    /**
+     * Metodo per fornire tutti i permessi USER ad un profilo
+     * @param profileUser il profilo user
+     */
     private void setUserAllPermissions( Profile profileUser ) {
 
         giveAllPermissions( profileUser.getId(), PermissionList.USER );
     }
 
+    /**
+     * Metodo per controllare se un utente esiste e crearlo
+     * @param email email dell'utente
+     * @param username username dell'utente
+     * @param i indice nel ciclo for(solo per logging)
+     * @return User appena creato
+     */
     private User checkAndCreateUser( String email, String username, int i ) {
 
         boolean userCheck = userService.existsByUsernameOrEmail( username, email );
 
         if( !userCheck ) {
-            logger.info( "[" + i + "] Utente inizializzato: " + email );
+            logger.info( "[{}] Utente inizializzato: {}", i, email );
             return createUser( email, username );
         } else {
-            logger.warn( "Utente ESISTENTE: " + email );
+            logger.warn( "Utente ESISTENTE: {}", email );
         }
 
         return null;
     }
 
+    /**
+     * Metodo per creare un utente
+     * @param email email dell'utente
+     * @param username username dell'utente
+     * @return User appena creato
+     */
     private User createUser( String email, String username ) {
         SignupDTO signupDTO = new SignupDTO();
         signupDTO.setEmail( email );
@@ -201,19 +239,30 @@ public class UsersMockInit {
     }
 
 
+    /**
+     * Metodo per dare tutti i permessi ad un profilo
+     * @param profileId id del profilo
+     * @param permissionName nome del permesso
+     */
     private void giveAllPermissions(
             Long profileId,
             PermissionList permissionName
     ) {
         Set<ProfilePermission> profilePermissions = profilePermissionRepository.findByProfileId( profileId );
 
+        // Ciclo su tutti i permessi disponibili
+        // Se il permesso è già presente, non fare nulla
         for( ProfilePermission profilePermission : profilePermissions ) {
             if( profilePermission.getPermission().getName().equals( permissionName ) ) {
                 return;
             }
         }
 
+
+        // Cerco il profilo dell'utente per il collegamento
         Profile profile = profileRepository.findByUserId( profileId );
+
+        // Cerco il permesso per il collegamento
         Optional<Permission> permission = permissionRepository.findByName( permissionName );
 
         if( permission.isEmpty() ) {
@@ -223,6 +272,7 @@ public class UsersMockInit {
 
         Permission permissionEntity = permission.get();
 
+        // Creo il collegamento settando tutte le flag a TRUE(1)
         ProfilePermission profilePermission = ProfilePermission
                 .builder()
                 .profile( profile )
