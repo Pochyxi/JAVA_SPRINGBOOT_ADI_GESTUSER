@@ -15,6 +15,10 @@ public class FirstPasswordGenerator {
     private static final String BASEPASS = "Password";
 
 
+    /**
+     * Generate a random password
+     * @return a random password
+     */
     public static String generatePass(){
 
         Random rand = new Random();

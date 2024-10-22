@@ -17,20 +17,20 @@ public class ApiKeyDataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // API key con ruolo READ
-        ApiKey apiKeyRead = new ApiKey();
-        apiKeyRead.setApikey("api-key-read");
-        apiKeyRead.setExpireDate( LocalDateTime.now().plusDays(30));
-        apiKeyRead.setApikeyRole( ApikeyRole.READ );
+        ApiKey apiKeyRead = createApiKeyWith30DaysExpire( "api-key-read", ApikeyRole.READ );
+        ApiKey apiKeyWrite = createApiKeyWith30DaysExpire( "api-key-write", ApikeyRole.WRITE );
 
-        // API key con ruolo WRITE
-        ApiKey apiKeyWrite = new ApiKey();
-        apiKeyWrite.setApikey("api-key-write");
-        apiKeyWrite.setExpireDate(LocalDateTime.now().plusDays(30));
-        apiKeyWrite.setApikeyRole(ApikeyRole.WRITE);
-
+        // Verifica che l'apikey non esista già
         saveAPikeyIfNotExists(apiKeyRead);
         saveAPikeyIfNotExists(apiKeyWrite);
+    }
+
+    private ApiKey createApiKeyWith30DaysExpire(String apikey, ApikeyRole apikeyRole) {
+        ApiKey apiKey = new ApiKey();
+        apiKey.setApikey(apikey);
+        apiKey.setExpireDate(LocalDateTime.now().plusDays(30));
+        apiKey.setApikeyRole(apikeyRole);
+        return apiKey;
     }
 
     private void saveAPikeyIfNotExists(ApiKey apiKey) {
