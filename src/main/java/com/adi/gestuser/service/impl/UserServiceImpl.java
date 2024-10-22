@@ -2,7 +2,6 @@ package com.adi.gestuser.service.impl;
 
 import com.adi.gestuser.dto.*;
 import com.adi.gestuser.entity.*;
-import com.adi.gestuser.enums.PermissionList;
 import com.adi.gestuser.exception.ErrorCodeList;
 import com.adi.gestuser.exception.ResourceNotFoundException;
 import com.adi.gestuser.exception.appException;
@@ -14,8 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,25 +26,25 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    private final PermissionRepository permissionRepository;
-
     private final ProfileRepository profileRepository;
 
     private final ProfilePermissionRepository profilePermissionRepository;
 
 
-    // VOID RETURNS //
+    //**** VOID RETURNS ****//
 
-    /* CREATE USER
-     * Creazione di un utente
+    /**
+     * CREATE USER
+     * @param user utente da creare
      */
     @Override
     public void createUser( User user ) {
         userRepository.save( user );
     }
 
-    /* DELETE USER
-     * Eliminazione di un utente
+    /**
+     * DELETE USER
+     * @param id id dell'utente da eliminare
      */
     @Override
     public void deleteUser( Long id ) {
@@ -58,18 +55,20 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    // USER RETURNS //
+    //**** USER RETURNS ****//
 
-    /* SAVE USER
-     * Salvataggio di un utente
+    /**
+     * SAVE
+     * @param user utente da salvare
      */
     @Override
     public User save( User user ) {
         return userRepository.save( user );
     }
 
-    /* FIND BY ID
-     * Recupero di un utente in base al suo ID
+    /**
+     * FIND BY ID
+     * @param id id dell'utente
      */
     @Override
     public User findById( Long id ) {
@@ -78,8 +77,9 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow( () -> new ResourceNotFoundException( ErrorCodeList.NF404 ) );
     }
 
-    /* FIND BY EMAIL
-     * Recupero di un utente in base alla sua email
+    /**
+     * FIND BY EMAIL
+     * @param email email dell'utente
      */
     @Override
     public Optional<User> findByEmail( String email ) {
@@ -87,14 +87,21 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmail( email );
     }
 
-    /* FIND BY USERNAME OR EMAIL
-     * Recupero di un utente in base al suo username o alla sua email
+    /**
+     * FIND BY USERNAME OR EMAIL
+     * @param username username dell'utente
+     * @param email email dell'utente
      */
     @Override
     public Optional<User> findByUsernameOrEmail( String username, String email ) {
         return userRepository.findByUsernameOrEmail( username, email );
     }
 
+    /**
+     * FIND DTO BY USERNAME OR EMAIL
+     * @param username username dell'utente
+     * @param email email dell'utente
+     */
     @Override
     public UserDTOInternal findDTOByUsernameOrEmail( String username, String email ) {
         User user = userRepository.findByUsernameOrEmail( username, email )
@@ -116,63 +123,43 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    //**** BOOLEAN RETURNS ****//
+
+    /**
+     * EXISTS BY USERNAME
+     * @param username username dell'utente
+     */
     @Override
     public Boolean existsByUsername( String username ) {
 
         return userRepository.existsByUsername( username );
     }
 
+
+    /**
+     * EXISTS BY EMAIL
+     * @param email email dell'utente
+     */
     @Override
     public Boolean existsByEmail( String email ) {
 
         return userRepository.existsByEmail( email );
     }
 
+
+    /**
+     * EXISTS BY USERNAME OR EMAIL
+     * @param username username dell'utente
+     * @param email email dell'utente
+     */
     @Override
     public Boolean existsByUsernameOrEmail( String username, String email ) {
         return userRepository.existsByUsernameOrEmail( username, email );
     }
 
-    /* GET USER BY AUTHENTICATION
-     * Questo metodo recupera l'utente autenticato dal database.
-     */
-    public User getUserByAuthentication() {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        String email = authentication.getName();
-
-        return userRepository.findByEmail( email )
-                .orElseThrow( () -> new appException( HttpStatus.BAD_REQUEST, ErrorCodeList.NF404 ) );
-    }
-
-    @Override
-    public Page<User> findByProfilePowerGreaterThanEqual( int power, Pageable page ) {
-        return userRepository.findByProfilePowerGreaterThanEqual( power, page );
-    }
-
-    /* DTO MAP TO ENTITY
-     * Mapping manuale
-     */
-    @Override
-    public User mapUserDTOToEntity( UserDTO userDTO ) {
-
-        User user = new User();
-        user.setId( userDTO.getId() );
-        user.setUsername( userDTO.getUsername() );
-        user.setEmail( userDTO.getEmail() );
-
-        Profile profile = profileRepository.findByUserId( userDTO.getId() );
-        user.setProfile( profile );
-
-        return user;
-    }
-
-
-    // BOOLEAN RETURNS
-
-    /* EXISTING USERNAME
-     * Questo metodo controlla se l'username fornito esiste già nel database.
+    /**
+     * EXISTING USERNAME
+     * @param username username dell'utente
      */
     private void existingUsername( String username ) {
         boolean usernameExists = false;
@@ -183,8 +170,9 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    /* EXISTING EMAIL
-     * Questo metodo controlla se l'email fornita esiste già nel database.
+    /**
+     * EXISTING EMAIL
+     * @param email email dell'utente
      */
     private void existingEmail( String email ) {
         boolean emailExists = false;
@@ -195,8 +183,10 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    /* EXISTING USER PROPERTIES
-     * Questo metodo controlla se l'username e l'email forniti esistono già nel database.
+    /**
+     * EXISTING USER PROPERTIES
+     * @param username username dell'utente
+     * @param email email dell'utente
      */
     private void existingUserProperties( String username, String email ) {
         existingUsername( username );
@@ -204,10 +194,11 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    // DTO RETURNS
+    //**** DTO RETURNS ****//
 
-    /* GET USER DTO BY ID
-     * Questo metodo restituisce un utente specifico in base al suo ID.
+    /**
+     * GET USER DTO BY ID
+     * @param id id dell'utente
      */
     @Override
     public UserDTO getUserDTOById( Long id ) {
@@ -215,8 +206,13 @@ public class UserServiceImpl implements UserService {
         return mapUserToDTO( user );
     }
 
-    /* GET ALL USERSDTO PAGED
-     * Questo metodo restituisce una lista di tutti gli utenti presenti nel database.
+    /**
+     * GET ALL USERS
+     * @param pageNo numero di pagina
+     * @param pageSize dimensione della pagina
+     * @param sortBy ordinamento
+     * @param sortDir direzione dell'ordinamento
+     * @param powerOfUser potere dell'utente
      */
     @Override
     public PagedResponseDTO<UserDTO> getAllUsers( int pageNo, int pageSize, String sortBy, String sortDir, int powerOfUser ) {
@@ -232,32 +228,18 @@ public class UserServiceImpl implements UserService {
         Page<User> userPageList =
                 userRepository.findAllByProfilePowerGreaterThanEqual( powerOfUser, pageable );
 
-        // Lista filtrata in base al potere dell'utente che effettua la richiesta
-        // tutti quelli con poteri maggiori o uguali a quelli del richiedente
-        List<User> userList = userPageList.getContent();
-
-        // Lista di UserDTO
-        List<UserDTO> userDTOList = userList.stream().map( this::mapUserToDTO ).toList();
-
-        // PagedResponseDTO
-        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
-
-        userResponseDTO.setContent( userDTOList );
-
-        userResponseDTO.setPageNo( userPageList.getNumber() );
-
-        userResponseDTO.setPageSize( userPageList.getSize() );
-
-        userResponseDTO.setTotalElements( userPageList.getTotalElements() );
-
-        userResponseDTO.setTotalPages( userPageList.getTotalPages() );
-
-        userResponseDTO.setLast( userPageList.isLast() );
-
-        // Restituisce la lista di UserDTO
-        return userResponseDTO;
+        return makePagedResponse( userPageList );
     }
 
+
+    /**
+     * GET BY EMAIL CONTAINS
+     * @param email email dell'utente
+     * @param pageNo numero di pagina
+     * @param pageSize dimensione della pagina
+     * @param sortBy ordinamento
+     * @param sortDir direzione dell'ordinamento
+     */
     @Override
     public PagedResponseDTO<UserDTO> getByEmailContains( String email, int pageNo, int pageSize, String sortBy, String sortDir ) {
 
@@ -271,33 +253,14 @@ public class UserServiceImpl implements UserService {
         Page<User> userPageList = userRepository.findByEmailContainsIgnoreCase( pageable, email );
 
 
-        List<User> userList = userPageList.getContent();
-
-
-        List<UserDTO> userDTOList = userList.stream().map( this::mapUserToDTO ).toList();
-
-
-        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
-
-        userResponseDTO.setContent( userDTOList );
-
-        userResponseDTO.setPageNo( userPageList.getNumber() );
-
-        userResponseDTO.setPageSize( userPageList.getSize() );
-
-        userResponseDTO.setTotalElements( userPageList.getTotalElements() );
-
-        userResponseDTO.setTotalPages( userPageList.getTotalPages() );
-
-        userResponseDTO.setLast( userPageList.isLast() );
-
-        return userResponseDTO;
-
+        return makePagedResponse( userPageList );
     }
 
 
-    /* USER MAP TO DTO
-     * Mapping manuale
+    /**
+     * MAP USER TO DTO
+     * @param user utente
+     * @return oggetto UserDTO
      */
     public UserDTO mapUserToDTO( User user ) {
         UserDTO userDTO = new UserDTO();
@@ -321,8 +284,10 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    /* MAP USER PERMISSION TO DTO
-     * Mappatura manuale
+    /**
+     * MAP PROFILE PERMISSION TO DTO
+     * @param profilePermission permessi del profilo
+     * @return oggetto ProfilePermissionDTO
      */
     @Override
     public ProfilePermissionDTO mapProfilePermissionToDTO( ProfilePermission profilePermission ) {
@@ -337,8 +302,12 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    /* MODIFY USER
-     * Modifica di un utente
+
+    /**
+     * MODIFY USER
+     * @param id id dell'utente
+     * @param userDTO oggetto UserDTO
+     * @return oggetto UserDTO
      */
     @Override
     public UserDTO modifyUser( Long id, UserDTO userDTO ) {
@@ -359,15 +328,12 @@ public class UserServiceImpl implements UserService {
         return mapUserToDTO( userSaved );
     }
 
-    /* GET PROFILE PERMISSIONS BY USER ID
-     * Questo metodo permette di ricevere una lista di ProfilePermissions in base all'id dell'utente
+
+    /**
+     * FIND BY PROFILE ID DTO
+     * @param profileId id del profilo
+     * @return insieme di ProfilePermissionDTO
      */
-    @Override
-    public Set<ProfilePermission> getProfilePermissionsByUserId( Long userId ) {
-
-        return profilePermissionRepository.findByProfileId( userId );
-    }
-
     @Override
     public Set<ProfilePermissionDTO> findByProfileIdDTO( Long profileId ) {
         Set<ProfilePermission> profilePermissions = profilePermissionRepository.findByProfileId( profileId );
@@ -377,6 +343,12 @@ public class UserServiceImpl implements UserService {
                 .collect( Collectors.toSet() );
     }
 
+
+    /**
+     * GET PROFILE BY USER ID
+     * @param userId id dell'utente
+     * @return oggetto ProfileDTO
+     */
     public ProfileDTO getProfileByUserId( Long userId ) {
 
         Profile profile = profileRepository.findByUserId( userId );
@@ -397,35 +369,12 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    // METODI INTERNI
+    //**** METODI INTERNI ****//
 
-    /* MAP PROFILE PERMISSION DTO TO ENTITY
-     * Mappatura manuale
-     */
-    private ProfilePermission mapProfilePermissionDTOToEntity( ProfilePermissionDTO profilePermissionDTO ) {
-        User user = userRepository.findById( profilePermissionDTO.getId() )
-                .orElseThrow( () -> new ResourceNotFoundException( ErrorCodeList.NF404 ) );
-
-        Profile profile = profileRepository.findById( user )
-                .orElseThrow( () -> new ResourceNotFoundException( ErrorCodeList.NF404 ) );
-
-        Permission permission = permissionRepository.findByName( PermissionList.valueOf( profilePermissionDTO.getPermissionName() ) )
-                .orElseThrow( () -> new ResourceNotFoundException( ErrorCodeList.NF404 ) );
-
-
-        return ProfilePermission.builder()
-                .id( profilePermissionDTO.getId() )
-                .profile( profile )
-                .permission( permission )
-                .valueRead( profilePermissionDTO.getValueRead() )
-                .valueCreate( profilePermissionDTO.getValueCreate() )
-                .valueUpdate( profilePermissionDTO.getValueUpdate() )
-                .valueDelete( profilePermissionDTO.getValueDelete() )
-                .build();
-    }
-
-    /* GET USER BY ID
-     * Questo metodo recupera un utente dal database in base al suo ID.
+    /**
+     * GET USER BY ID
+     * @param id id dell'utente
+     * @return oggetto User
      */
     private User getUserById( Long id ) {
         return userRepository.findById( id ).orElseThrow( () -> new ResourceNotFoundException(
@@ -433,12 +382,41 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    /* SET USERNAME AND EMAIL
-     *Questo metodo accetta uno UserDTO e uno User e setta le proprietà di User in base alle informazioni
-     * ricavate dall'oggetto userDTO
+    /**
+     * SET USERNAME AND EMAIL
+     * @param userDTO oggetto UserDTO
+     * @param user utente
      */
     private void setUsernameAndEmail( UserDTO userDTO, User user ) {
         user.setUsername( userDTO.getUsername() == null ? user.getUsername() : userDTO.getUsername() );
         user.setEmail( userDTO.getEmail() == null ? user.getEmail() : userDTO.getEmail() );
+    }
+
+
+    /**
+     * MAKE PAGED RESPONSE, in base alla lista di utenti restituisce un oggetto PagedResponseDTO
+     * @param userPageList lista di utenti
+     * @return oggetto PagedResponseDTO
+     */
+    private PagedResponseDTO<UserDTO> makePagedResponse( Page<User> userPageList ) {
+        List<User> userList = userPageList.getContent();
+
+        List<UserDTO> userDTOList = userList.stream().map( this::mapUserToDTO ).toList();
+
+        PagedResponseDTO<UserDTO> userResponseDTO = new PagedResponseDTO<>();
+
+        userResponseDTO.setContent( userDTOList );
+
+        userResponseDTO.setPageNo( userPageList.getNumber() );
+
+        userResponseDTO.setPageSize( userPageList.getSize() );
+
+        userResponseDTO.setTotalElements( userPageList.getTotalElements() );
+
+        userResponseDTO.setTotalPages( userPageList.getTotalPages() );
+
+        userResponseDTO.setLast( userPageList.isLast() );
+
+        return userResponseDTO;
     }
 }

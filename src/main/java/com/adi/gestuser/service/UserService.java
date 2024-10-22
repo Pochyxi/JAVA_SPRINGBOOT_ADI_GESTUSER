@@ -3,8 +3,6 @@ package com.adi.gestuser.service;
 import com.adi.gestuser.dto.*;
 import com.adi.gestuser.entity.ProfilePermission;
 import com.adi.gestuser.entity.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 import java.util.Set;
@@ -16,8 +14,6 @@ public interface UserService {
     void deleteUser(Long id );
 
     // MAPPING
-    User mapUserDTOToEntity( UserDTO userDTO);
-
     UserDTO mapUserToDTO( User user);
 
 
@@ -30,14 +26,8 @@ public interface UserService {
 
     Optional<User> findByUsernameOrEmail( String username, String email );
 
+    // Questo metodo permette di ottenere i dati di un utente per username o email, restituisce anche la password crittografata
     UserDTOInternal findDTOByUsernameOrEmail( String username, String email );
-
-    User getUserByAuthentication();
-
-    Page<User> findByProfilePowerGreaterThanEqual( int power, Pageable page);
-
-    Set<ProfilePermission> getProfilePermissionsByUserId( Long userId );
-
 
     // BOOLEAN RETURNS
     Boolean existsByUsername( String username );
