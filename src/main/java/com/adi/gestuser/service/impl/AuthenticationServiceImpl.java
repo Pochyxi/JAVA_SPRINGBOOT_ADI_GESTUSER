@@ -40,8 +40,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final EmailService emailService;
 
-    /* SIGNUP
-     * Questo metodo gestisce il processo di registrazione di un utente.
+
+    /**
+     * CREATE USER, per utilizzo interno
+     * @param signupDTO username, email
+     * @param confEmail boolean
+     * @return User
      */
     @Override
     @Transactional
@@ -71,7 +75,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // Crea un nuovo oggetto Confirmation e popola i suoi campi con l'utente.
         Confirmation confirmation = new Confirmation(user);
-        confirmation.setTokenType( TokenType.email);
+        confirmation.setTokenType( TokenType.EMAIL );
         // Salva la conferma nel database.
         confirmationRepository.save(confirmation);
 
@@ -104,6 +108,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return user;
     }
 
+    /**
+     * CHANGE EMAIL
+     * @param userId id utente
+     * @param email nuova email
+     */
     @Override
     public void changeEmail(Long userId, String email) {
         User user = userService.findById(userId);
@@ -122,7 +131,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         Confirmation confirmation = new Confirmation(user);
 
-        confirmation.setTokenType( TokenType.email);
+        confirmation.setTokenType( TokenType.EMAIL );
 
         confirmationRepository.save(confirmation);
 
@@ -137,16 +146,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
 
-    /* CHANGE PASSWORD
-        * Questo metodo gestisce il processo di cambio password di un utente.
+    /**
+     * CHANGE PASSWORD
+     * @param changePasswordDTO dto per la modifica della password
+     * @param token token di verifica inviato tramite email
      */
+    @Transactional
     public void changePassword( ChangePasswordDTO changePasswordDTO, String token) {
         // User a null
         User user;
 
         // Se il token è diverso da null, allora l'utente ha richiesto il cambio password tramite email.
         if (token != null && !token.isEmpty()) {
-            Confirmation confirmation = verifyToken(token, TokenType.password);
+            Confirmation confirmation = verifyToken(token, TokenType.PASSWORD );
 
             user = confirmation.getUser();
 
@@ -185,10 +197,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userService.createUser(user);
     }
 
-    /* VERIFY TOKEN
-        * Questo metodo gestisce il processo di verifica del token di conferma.
+
+    /**
+     * VERIFY TOKEN
+     * @param token, token di verifica
+     * @param tokenType, tipo di token, le verifiche possono essere di vario tipo
+     * @return Confirmation
      */
     @Override
+    @Transactional
     public Confirmation verifyToken( String token, TokenType tokenType) {
 
         // Recupera la conferma dal database.
@@ -212,6 +229,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Salva l'utente nel database.
         userService.save(user);
 
+        // Dopo la corretta verifica del token, provvedo ad eliminare tutti gli altri token generati e non utilizzati
+        // per quella determinata tipologia
         Set<Confirmation> confirmationSet  = confirmationRepository.findByTokenTypeAndUserId(tokenType, user.getId());
 
         // Elimina la conferma dal database.
@@ -223,8 +242,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
 
-    /* RESET PASSWORD REQUEST
-        * Questo metodo gestisce il processo di richiesta di reset della password.
+    /**
+     * RESET PASSWORD REQUEST, invia una email di reset in caso venga trovato un match
+     * @param email email dell'utente
      */
     @Override
     public void resetPasswordRequest(String email) {
@@ -240,7 +260,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             // Crea un nuovo oggetto Confirmation e popola i suoi campi con l'utente.
             Confirmation confirmation = new Confirmation(user);
             confirmation.setUser(user);
-            confirmation.setTokenType( TokenType.password);
+            confirmation.setTokenType( TokenType.PASSWORD );
 
             // Salva la conferma nel database.
             confirmationRepository.save(confirmation);
@@ -250,6 +270,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
+
+    /**
+     * RESEND VERIFICATION REQUEST, invia una email di verifica
+     * @param userId id utente
+     */
     @Override
     public void resendVerificationRequest(Long userId) {
 
@@ -259,7 +284,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         Confirmation confirmation = confirmationSet.stream().findFirst().orElseGet(() -> {
                     Confirmation newConfirmation = new Confirmation(user);
-                    newConfirmation.setTokenType( TokenType.email);
+                    newConfirmation.setTokenType( TokenType.EMAIL );
                     // Salva la conferma nel database.
                     confirmationRepository.save(newConfirmation);
                 return newConfirmation;
