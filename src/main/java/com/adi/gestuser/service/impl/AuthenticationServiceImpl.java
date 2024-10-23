@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -77,7 +78,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Confirmation confirmation = new Confirmation(user);
         confirmation.setTokenType( TokenType.EMAIL );
         // Salva la conferma nel database.
-        confirmationRepository.save(confirmation);
+        Confirmation confimationSaved = confirmationRepository.save(confirmation);
+
+        List<Confirmation> confirmationList = List.of(confimationSaved);
+
+        user.setConfirmation( confirmationList );
 
         // todo: eliminare in produzione
         // Invia un'email all'utente con il token di conferma e la password temporanea.
@@ -103,7 +108,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userProfile.setUser(user);
 
         // Salva il profilo nel database.
-        profileRepository.save(userProfile);
+        Profile profileSaved = profileRepository.save(userProfile);
+
+        user.setProfile( profileSaved );
 
         return user;
     }
